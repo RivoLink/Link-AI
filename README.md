@@ -1,2 +1,2 @@
 # LinkIA
-This is my first implementarion of reinforcement learning.
+This is my first implementation of reinforcement learning.
