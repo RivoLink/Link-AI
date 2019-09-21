@@ -1,5 +1,6 @@
 # LinkIA
 >This is an implementation of  **Reinforcement Learning** in video game. The goal is to find the (best) path from a starting point to an end point using only **Reinforcement Learning**.
 
-![image](images/screenshot_1.png)
-
+<center>
+  <img src="images/screenshot_1.png" alt="screenshot"/>
+</center>
