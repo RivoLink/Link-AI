@@ -1,0 +1,47 @@
+zelda_dacing.png
+size: 192,32
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+sprite0
+  rotate: false
+  xy: 0,0
+  size: 32,32
+  orig: 32,32
+  offset: 0, 0
+  index: -1
+sprite1
+  rotate: false
+  xy: 32,0
+  size: 32,32
+  orig: 32,32
+  offset: 0, 0
+  index: -1
+sprite2
+  rotate: false
+  xy: 64,0
+  size: 32,32
+  orig: 32,32
+  offset: 0, 0
+  index: -1
+sprite3
+  rotate: false
+  xy: 96,0
+  size: 32,32
+  orig: 32,32
+  offset: 0, 0
+  index: -1
+sprite4
+  rotate: false
+  xy: 128,0
+  size: 32,32
+  orig: 32,32
+  offset: 0, 0
+  index: -1
+sprite5
+  rotate: false
+  xy: 160,0
+  size: 32,32
+  orig: 32,32
+  offset: 0, 0
+  index: -1
