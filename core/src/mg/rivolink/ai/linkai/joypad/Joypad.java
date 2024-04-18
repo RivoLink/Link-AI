@@ -8,6 +8,7 @@ import static mg.rivolink.ai.linkai.screens.viewports.GameViewport.unproject;
 
 import java.util.ArrayList;
 
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -47,6 +48,15 @@ public class Joypad implements InputProcessor {
 
     public boolean isInDir(Pointer p){
         return p.isIn(xdRef, ydRef, 128);
+    }
+
+    public int getDirKey(int key){
+        switch(key){
+            case Keys.UP: return Joypad.UP;
+            case Keys.LEFT: return Joypad.LEFT;
+            case Keys.RIGHT: return Joypad.RIGHT;
+            default: return Joypad.STOP;
+        }
     }
 
     public int[] getDirCode(){
@@ -127,6 +137,16 @@ public class Joypad implements InputProcessor {
     }
 
     @Override
+    public boolean keyDown(int key){
+        int direction = getDirKey(key);
+
+        for(JoypadListener listener:listeners)
+            listener.joypadInput(direction, 0, 0);
+
+        return false;
+    }
+
+    @Override
     public boolean touchDragged(int x, int y, int pointer){
         return false;
     }
@@ -138,11 +158,6 @@ public class Joypad implements InputProcessor {
 
     @Override
     public boolean scrolled(int p1){
-        return false;
-    }
-
-    @Override
-    public boolean keyDown(int p1){
         return false;
     }
 

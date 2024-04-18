@@ -179,6 +179,9 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         Agent.Action action = null;
 
         switch(direction){
+            case Joypad.STOP:{
+                break;
+            }
             case Joypad.UP:{
                 action = Agent.Action.GO_AHEAD;
                 break;
