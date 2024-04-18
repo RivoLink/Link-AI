@@ -168,7 +168,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         agent.set(
             setting.linkX,
             setting.linkY,
-            agent.getOrientation()
+            setting.linkOri
         );
 
         env.init(agent);
@@ -276,11 +276,12 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
             else if(actor == butt_setting){
                 isVisible = win_setting.isVisible();
 
-                win_setting.setAgentX(0, agent.getX());
-                win_setting.setAgentY(0, agent.getY());
+                win_setting.setAgentX(0, zelda.getX());
+                win_setting.setAgentY(0, zelda.getY());
 
-                win_setting.setAgentX(1, zelda.getX());
-                win_setting.setAgentY(1, zelda.getY());
+                win_setting.setAgentX(1, agent.getX());
+                win_setting.setAgentY(1, agent.getY());
+                win_setting.setAgentOri(1, agent.getOrientation());
 
                 window = win_setting;
             }
