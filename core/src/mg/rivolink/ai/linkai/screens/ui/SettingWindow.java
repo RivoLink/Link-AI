@@ -87,11 +87,11 @@ public class SettingWindow extends Window {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int index){
                 if(settingListener != null){
                     Setting setting = new Setting();
-                    setting.linkX = (int)getX(0);
-                    setting.linkY = (int)getY(0);
+                    setting.linkX = (int)getAgentX(0);
+                    setting.linkY = (int)getAgentY(0);
                     //setting.linkOri =
-                    setting.zeldaX = (int)getX(1);
-                    setting.zeldaY = (int)getY(1);
+                    setting.zeldaX = (int)getAgentX(1);
+                    setting.zeldaY = (int)getAgentY(1);
                     //setting.zeldaOri =
 
                     notif_label.setText("Setting saved.");
@@ -116,12 +116,12 @@ public class SettingWindow extends Window {
             notif_label.setText("");
     }
 
-    public void setX(int x, int agent){
+    public void setAgentX(int agent, int x){
         TextField fieldX = (agent == 0)?link_fieldX:zelda_fieldX;
         fieldX.setText("Origin X: " + x/tileW);
     }
 
-    public void setY(int y, int agent){
+    public void setAgentY(int agent, int y){
         TextField fieldY = (agent == 0)?link_fieldY:zelda_fieldY;
         fieldY.setText("Origin Y: " + y/tileH);
     }
@@ -129,7 +129,7 @@ public class SettingWindow extends Window {
     public void setOrientation(){
     }
 
-    public float getX(int agent){
+    public float getAgentX(int agent){
         int x = 0;
         TextField fieldX = (agent == 0)?link_fieldX:zelda_fieldX;
 
@@ -137,13 +137,13 @@ public class SettingWindow extends Window {
             String textX = fieldX.getText().split(":")[1];
             x = tileW*Integer.parseInt(textX.trim());
         }
-        finally {
+        catch(NumberFormatException e) {
         }
 
         return x;
     }
 
-    public float getY(int agent){
+    public float getAgentY(int agent){
         int y = 0;
         TextField fieldY = (agent == 0)?link_fieldY:zelda_fieldY;
 
@@ -151,7 +151,7 @@ public class SettingWindow extends Window {
             String textX = fieldY.getText().split(":")[1];
             y = tileH*Integer.parseInt(textX.trim());
         }
-        finally {
+        catch(NumberFormatException e) {
         }
 
         return y;
