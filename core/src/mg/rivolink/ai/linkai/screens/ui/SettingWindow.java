@@ -10,6 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
+import mg.rivolink.ai.linkai.agents.Agent;
+
 public class SettingWindow extends Window {
 
     public interface SettingListener {
@@ -17,12 +19,16 @@ public class SettingWindow extends Window {
     }
 
     public class Setting {
-        public int linkX, linkY, linkOri;
-        public int zeldaX, zeldaY, zeldaOri;
+        public int zeldaX, zeldaY;
+        public int linkX, linkY;
+        public Agent.Orientation linkOri;
     }
 
-    private static final String[] ORI = {
-        "Up", "Right", "Down", "Left"
+    private static final Agent.Orientation[] ORI = {
+        Agent.Orientation.UP,
+        Agent.Orientation.RIGHT,
+        Agent.Orientation.DOWN,
+        Agent.Orientation.LEFT,
     };
 
     private Label notif_label;
@@ -30,12 +36,11 @@ public class SettingWindow extends Window {
     private Label link_label;
     private TextField link_fieldX;
     private TextField link_fieldY;
-    private SelectBox<String> link_selectOri;
+    private SelectBox<Agent.Orientation> link_selectOri;
 
     private Label zelda_label;
     private TextField zelda_fieldX;
     private TextField zelda_fieldY;
-    private SelectBox<String> zelda_selectOri;
 
     private Button save_button;
 
@@ -46,35 +51,29 @@ public class SettingWindow extends Window {
     public SettingWindow(String title, Skin skin){
         super(title, skin);
 
+        zelda_label = new Label("--- Zelda --------------------", skin);
+        top().add(zelda_label).pad(3).expandX().fillX().row();
+
+        zelda_fieldX = new TextField("Origin X: ", skin);
+        top().add(zelda_fieldX).pad(3).padRight(1.5f).expandX().fillX();
+
+        zelda_fieldY = new TextField("Origin Y: ", skin);
+        top().add(zelda_fieldY).pad(3).padLeft(1.5f).expandX().fillX();
+
+        top().add().expandX().fillX().row();
+
         link_label = new Label("--- Link --------------------", skin);
         top().add(link_label).pad(3).expandX().fillX().row();
 
         link_fieldX = new TextField("Origin X: ", skin);
-        //link_fieldX.setTextFieldFilter(new DigitsOnlyFilter());
         top().add(link_fieldX).pad(3).padRight(1.5f).expandX().fillX();
 
         link_fieldY = new TextField("Origin Y: ", skin);
-        //link_fieldY.setTextFieldFilter(new DigitsOnlyFilter());
         top().add(link_fieldY).pad(3).padLeft(1.5f).expandX().fillX();
 
         link_selectOri = new SelectBox<>(skin);
         link_selectOri.setItems(ORI);
         top().add(link_selectOri).pad(3).padLeft(1.5f).expandX().fillX().row();
-
-        zelda_label = new Label("--- Zelda --------------------", skin);
-        top().add(zelda_label).pad(3).expandX().fillX().row();
-
-        zelda_fieldX = new TextField("Origin X: ", skin);
-        //zelda_fieldX.setTextFieldFilter(new DigitsOnlyFilter());
-        top().add(zelda_fieldX).pad(3).padRight(1.5f).expandX().fillX();
-
-        zelda_fieldY = new TextField("Origin Y: ", skin);
-        //zelda_fieldY.setTextFieldFilter(new DigitsOnlyFilter());
-        top().add(zelda_fieldY).pad(3).padLeft(1.5f).expandX().fillX();
-
-        zelda_selectOri = new SelectBox<>(skin);
-        zelda_selectOri.setItems(ORI);
-        top().add(zelda_selectOri).pad(3).padLeft(1.5f).expandX().fillX().row();
 
         top().add().expandY().fillY().row();
 
@@ -87,12 +86,13 @@ public class SettingWindow extends Window {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int index){
                 if(settingListener != null){
                     Setting setting = new Setting();
-                    setting.linkX = (int)getAgentX(0);
-                    setting.linkY = (int)getAgentY(0);
-                    //setting.linkOri =
-                    setting.zeldaX = (int)getAgentX(1);
-                    setting.zeldaY = (int)getAgentY(1);
-                    //setting.zeldaOri =
+
+                    setting.zeldaX = (int)getAgentX(0);
+                    setting.zeldaY = (int)getAgentY(0);
+
+                    setting.linkX = (int)getAgentX(1);
+                    setting.linkY = (int)getAgentY(1);
+                    setting.linkOri = link_selectOri.getSelected();
 
                     notif_label.setText("Setting saved.");
                     settingListener.onSettingChange(setting);
@@ -117,13 +117,18 @@ public class SettingWindow extends Window {
     }
 
     public void setAgentX(int agent, int x){
-        TextField fieldX = (agent == 0)?link_fieldX:zelda_fieldX;
+        TextField fieldX = (agent == 1)?link_fieldX:zelda_fieldX;
         fieldX.setText("Origin X: " + x/tileW);
     }
 
     public void setAgentY(int agent, int y){
-        TextField fieldY = (agent == 0)?link_fieldY:zelda_fieldY;
+        TextField fieldY = (agent == 1)?link_fieldY:zelda_fieldY;
         fieldY.setText("Origin Y: " + y/tileH);
+    }
+
+    public void setAgentOri(int agent, Agent.Orientation ori){
+        if(agent == 1)
+            link_selectOri.setSelected(ori);
     }
 
     public void setOrientation(){
@@ -131,7 +136,7 @@ public class SettingWindow extends Window {
 
     public float getAgentX(int agent){
         int x = 0;
-        TextField fieldX = (agent == 0)?link_fieldX:zelda_fieldX;
+        TextField fieldX = (agent == 1)?link_fieldX:zelda_fieldX;
 
         try {
             String textX = fieldX.getText().split(":")[1];
@@ -145,7 +150,7 @@ public class SettingWindow extends Window {
 
     public float getAgentY(int agent){
         int y = 0;
-        TextField fieldY = (agent == 0)?link_fieldY:zelda_fieldY;
+        TextField fieldY = (agent == 1)?link_fieldY:zelda_fieldY;
 
         try{
             String textX = fieldY.getText().split(":")[1];

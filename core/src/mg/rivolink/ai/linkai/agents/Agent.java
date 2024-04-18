@@ -29,15 +29,21 @@ public class Agent {
 
     public enum Orientation {
 
-        UP(0),
-        RIGHT(1),
-        DOWN(2),
-        LEFT(3);
+        UP(0, "Up"),
+        RIGHT(1, "Right"),
+        DOWN(2, "Down"),
+        LEFT(3, "Left");
 
         final int val;
+        final String text;
 
-        Orientation(int val){
+        Orientation(int val, String text){
             this.val = val;
+            this.text = text;
+        }
+
+        public String toString(){
+            return text;
         }
 
         // clockwise
