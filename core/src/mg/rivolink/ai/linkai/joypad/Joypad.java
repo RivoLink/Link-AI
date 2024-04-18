@@ -19,6 +19,9 @@ public class Joypad implements InputProcessor {
     private final int FIRST = 0;
     private final int SECOND = 1;
 
+    public static final int KEY = 0;
+    public static final int POINTER = 1;
+
     public static final int STOP = -1;
     public static final int UP = 0;
     public static final int DOWN = 1;
@@ -114,7 +117,7 @@ public class Joypad implements InputProcessor {
 
         int[] params = getDirCode();
         for(JoypadListener listener:listeners)
-            listener.joypadInput(params[2], params[0], params[1]);
+            listener.joypadInput(Joypad.POINTER, params[2], params[0], params[1]);
 
         return false;
     }
@@ -141,7 +144,7 @@ public class Joypad implements InputProcessor {
         int direction = getDirKey(key);
 
         for(JoypadListener listener:listeners)
-            listener.joypadInput(direction, 0, 0);
+            listener.joypadInput(Joypad.KEY, direction, 0, 0);
 
         return false;
     }

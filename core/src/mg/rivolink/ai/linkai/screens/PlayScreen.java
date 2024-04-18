@@ -175,13 +175,10 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     }
 
     @Override
-    public void joypadInput(int direction, int px, int py){
+    public void joypadInput(int type, int direction, int px, int py){
         Agent.Action action = null;
 
         switch(direction){
-            case Joypad.STOP:{
-                break;
-            }
             case Joypad.UP:{
                 action = Agent.Action.GO_AHEAD;
                 break;
@@ -195,7 +192,8 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
                 break;
             }
             default:{
-                pointer_pop.showPointerPosition(px, py);
+                if(type == Joypad.POINTER)
+                    pointer_pop.showPointerPosition(px, py);
             }
         }
 
