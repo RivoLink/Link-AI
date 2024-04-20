@@ -21,7 +21,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import mg.rivolink.ai.linkai.Data;
 import mg.rivolink.ai.linkai.agents.Agent;
-import mg.rivolink.ai.linkai.agents.animations.Loopaction;
+import mg.rivolink.ai.linkai.agents.Target;
 import mg.rivolink.ai.linkai.agents.qlearning.QLearn;
 import mg.rivolink.ai.linkai.environments.Environment;
 import mg.rivolink.ai.linkai.joypad.Joypad;
@@ -59,7 +59,6 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
 
     private Batch batch;
     private Joypad joypad;
-    private Loopaction zelda;
 
     private TextureRegion[] link;
     private TextureRegion[] colors;
@@ -70,6 +69,8 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     private float e = 1f;
 
     private Agent agent;
+    private Target zelda;
+
     private Environment env;
     private Environment.Transition t;
 
@@ -81,17 +82,17 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         stage = new Stage();
         stage.getViewport().setCamera(camera);
 
-        agent = new Agent(4*16, 3*16, Agent.Orientation.DOWN);
-
-        env = new Environment(Data.MapLoader.level_01);
-        t = env.init(agent);
-
         colors = Data.TextureRegionLoader.colors;
 
         link = Data.TextureRegionLoader.link;
 
-        zelda = new Loopaction(Data.AtlasLoader.zelda_atlas, 6);
+        zelda = new Target(Data.AtlasLoader.zelda_atlas, 6);
         zelda.setPosition(9*16, 7*16);
+
+        agent = new Agent(4*16, 3*16, Agent.Orientation.DOWN);
+
+        env = new Environment(Data.MapLoader.level_01);
+        t = env.init(agent, zelda);
 
         joypad = new Joypad();
         joypad.addJoypadListener(this);
@@ -171,7 +172,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
             setting.linkOri
         );
 
-        env.init(agent);
+        env.init(agent, zelda);
     }
 
     @Override

@@ -19,7 +19,17 @@ public class Environment {
 
     public static final float INTERVAL = 0.1f;
 
-    public static class Transition{
+    public interface Destination {
+
+        public int getX();
+        public int getY();
+
+        public int getLastX();
+        public int getLastY();
+
+    }
+
+    public static class Transition {
 
         public int x = 0;
         public int y = 0;
@@ -90,7 +100,9 @@ public class Environment {
         this.map = new MapRenderer(map);
     }
 
-    public Transition init(Agent agent){
+    public Transition init(Agent agent, Destination dest){
+        updateDestination(dest);
+
         iniTrans = new Transition(
             agent.getX(),
             agent.getY(),
@@ -205,6 +217,12 @@ public class Environment {
         }
         state(action == Agent.Action.GO_AHEAD);
         return t;
+    }
+
+    public void updateDestination(Destination dest){
+        if(dest.getLastX() != -1)
+            map.removeCollisionTile(dest.getLastX()/map.tileW, dest.getLastY()/map.tileH);
+        map.addCollisionTile(1, dest.getX()/map.tileW, dest.getY()/map.tileH);
     }
 
     public void setView(OrthographicCamera camera){

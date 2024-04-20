@@ -11,6 +11,7 @@ import com.badlogic.gdx.maps.objects.TextureMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTile;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
@@ -53,6 +54,13 @@ public class MapRenderer extends OrthogonalTiledMapRenderer {
         return cell.getTile();
     }
 
+    public TiledMapTile getTile(String tileSetName, int tmxID){
+        TiledMapTileSet tileSet = map.getTileSets().getTileSet(tileSetName);
+        if(tileSet != null)
+            return tileSet.getTile((int)tileSet.getProperties().get("firstgid") + tmxID);
+        return null;
+    }
+
     public TiledMapTileLayer getCollisionLayer(){
         return collisionLayer;
     }
@@ -61,14 +69,17 @@ public class MapRenderer extends OrthogonalTiledMapRenderer {
         return collisionLayer.getCell(tileX, tileY).getTile().getId();
     }
 
+    public void addCollisionTile(int tmxID, int x, int y){
+        TiledMapTile tile = getTile("color", tmxID);
+        collisionLayer.getCell(x, y).setTile(new StaticTiledMapTile((StaticTiledMapTile)tile));
+    }
+
     public void addCollisionTile(int x, int y){
-        // TiledMapTileLayer.Cell cell = new TiledMapTileLayer.Cell();
-        // cell.setTile(new StaticTiledMapTile((StaticTiledMapTile)collisionLayer.getCell(1, 2).getTile()));
-        // collisionLayer.setCell(x, y, cell);
+        addCollisionTile(3, x, y);
     }
 
     public void removeCollisionTile(int x, int y){
-        collisionLayer.setCell(x, y, null);
+        addCollisionTile(8, x, y);
     }
 
     public void addSprite(Sprite sprite){
