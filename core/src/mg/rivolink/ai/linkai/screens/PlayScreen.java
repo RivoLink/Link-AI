@@ -17,15 +17,19 @@ import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import mg.rivolink.ai.linkai.Data;
 import mg.rivolink.ai.linkai.agents.Agent;
 import mg.rivolink.ai.linkai.agents.Target;
 import mg.rivolink.ai.linkai.agents.qlearning.QLearn;
+import mg.rivolink.ai.linkai.algorithm.Algorithm;
+import mg.rivolink.ai.linkai.algorithm.AlgorithmManager;
 import mg.rivolink.ai.linkai.environments.Environment;
 import mg.rivolink.ai.linkai.joypad.Joypad;
 import mg.rivolink.ai.linkai.joypad.JoypadListener;
+import mg.rivolink.ai.linkai.screens.ui.AlgorithmSelect;
 import mg.rivolink.ai.linkai.screens.ui.LogWindow;
 import mg.rivolink.ai.linkai.screens.ui.PointerPop;
 import mg.rivolink.ai.linkai.screens.ui.SettingWindow;
@@ -44,6 +48,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     private StatsPanel spanel;
 
     private PointerPop pointer_pop;
+    private AlgorithmSelect select_algo;
 
     private Button butt_setting;
     private SettingWindow win_setting;
@@ -74,6 +79,8 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     private Environment env;
     private Environment.Transition t;
 
+    private AlgorithmManager algorithmManager;
+
     public PlayScreen(){
 
         batch = new SpriteBatch();
@@ -97,6 +104,8 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         joypad = new Joypad();
         joypad.addJoypadListener(this);
 
+        algorithmManager = new AlgorithmManager();
+
         Gdx.input.setInputProcessor(new InputMultiplexer(stage, joypad));
 
         createStage();
@@ -109,21 +118,27 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         spanel.setPosition(100,50);
         spanel.setStats(t.sp);
 
+        select_algo = new AlgorithmSelect(skin);
+        select_algo.setItems(Algorithm.ALL);
+        select_algo.setSelected(Algorithm.getSaved());
+        select_algo.addListener(changeListener);
+        panel.addActor(select_algo);
+
         butt_setting = new TextButton("Setting", skin);
-        butt_setting.addListener(listener);
+        butt_setting.addListener(clickListener);
         panel.addActor(butt_setting, true);
 
         butt_automate = new TextButton("Automate", skin);
-        butt_automate.addListener(listener);
+        butt_automate.addListener(clickListener);
         panel.addActor(butt_automate, true);
 
         butt_learning = new TextButton("Learning", skin);
-        butt_learning.addListener(listener);
+        butt_learning.addListener(clickListener);
         butt_learning.setChecked(true);
         panel.addActor(butt_learning, true);
 
         butt_grid = new TextButton("Grid", skin);
-        butt_grid.addListener(listener);
+        butt_grid.addListener(clickListener);
         panel.addActor(butt_grid, true);
 
         win_setting = new SettingWindow("Setting", skin);
@@ -133,8 +148,8 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         win_setting.setVisible(false);
         stage.addActor(win_setting);
 
-        butt_qtable = new TextButton("Q-table", skin);
-        butt_qtable.addListener(listener);
+        butt_qtable = new TextButton("Table", skin);
+        butt_qtable.addListener(clickListener);
         panel.addActor(butt_qtable);
 
         win_qtable = new LogWindow("Q-table", skin);
@@ -144,7 +159,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         stage.addActor(win_qtable);
 
         butt_stats = new TextButton("Stats", skin);
-        butt_stats.addListener(listener);
+        butt_stats.addListener(clickListener);
         panel.addActor(butt_stats);
 
         win_stats = new LogWindow("Stats", skin);
@@ -256,7 +271,36 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         stage.draw();
     }
 
-    ClickListener listener = new ClickListener(){
+    ChangeListener changeListener = new ChangeListener(){
+        @Override
+        public void changed(ChangeEvent event, Actor actor) {
+            if (actor == select_algo) {
+                butt_qtable.setChecked(false);
+                butt_stats.setChecked(false);
+
+                win_qtable.setVisible(false);
+                win_stats.setVisible(false);
+
+                Algorithm algo = select_algo.getSelected();
+                algorithmManager.setAlgorithm(algo);
+
+                switch (algo) {
+                    case Q_TABLE:
+                        butt_qtable.setVisible(true);
+                        butt_stats.setVisible(true);
+                        break;
+                    case NEURAL_NETWORK:
+                        butt_qtable.setVisible(false);
+                        butt_stats.setVisible(false);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    };
+
+    ClickListener clickListener = new ClickListener(){
         @Override
         public boolean touchDown(InputEvent event, float x, float y, int pointer, int index){
             Actor actor = event.getListenerActor();
