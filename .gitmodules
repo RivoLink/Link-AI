@@ -1,0 +1,4 @@
+[submodule "neural-network"]
+	path = neural-network
+	url = https://github.com/RivoLink/neural-network
+	branch = main
