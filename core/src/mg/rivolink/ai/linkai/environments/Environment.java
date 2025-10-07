@@ -190,32 +190,35 @@ public class Environment {
             case GO_AHEAD:{
                 if(t.s[1] == INTERDIT){
                     iniTrans.copyTo(t);
-                    t.r = -3;
+                    t.r = -10;
                     t.end = true;
                     state(false);
                     return t;
                 }
                 else if(t.s[1] == BLOCKED){
+                    t.r = -5;
                     t.sp(t.s);
                     return t;
                 }
                 else if(t.s[1] == DEST){
                     iniTrans.copyTo(t);
-                    t.r = 5;
+                    t.r = 10;
                     t.end = true;
                     state(false);
                     return t;
                 }
                 else{
-                    t.r = 0;
+                    t.r = 1;
                 }
                 break;
             }
             case TURN_LEFT:{
+                t.r = -1;
                 t.ori = t.ori.minus();
                 break;
             }
             case TURN_RIGHT:{
+                t.r = -1;
                 t.ori = t.ori.plus();
                 break;
             }

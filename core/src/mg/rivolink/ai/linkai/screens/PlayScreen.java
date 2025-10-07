@@ -74,7 +74,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener, Setting
 
     private float epsilon = 1.0f;
     private float epsilonMin = 0.01f;
-    private float epsilonDecay = 0.995f;
+    private float epsilonDecay = 0.975f;
 
     private Agent agent;
     private Target zelda;
