@@ -37,7 +37,7 @@ public class DeepQLearn implements RL {
     private static final int UPDATE_TARGET_FREQUENCY = 200;
 
     // Hyperparameters
-    private static final float LEARNING_RATE = 0.001f;
+    private static final float LEARNING_RATE = 0.01f;
     private static final float DISCOUNT_FACTOR = 0.95f;
     
     // Reward normalization
