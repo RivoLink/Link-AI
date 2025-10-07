@@ -24,8 +24,8 @@ import mg.rivolink.ai.linkai.Data;
 import mg.rivolink.ai.linkai.agents.Agent;
 import mg.rivolink.ai.linkai.agents.Target;
 import mg.rivolink.ai.linkai.agents.qlearning.QLearn;
+import mg.rivolink.ai.linkai.agents.qlearning.DeepQLearn;
 import mg.rivolink.ai.linkai.algorithm.Algorithm;
-import mg.rivolink.ai.linkai.algorithm.AlgorithmManager;
 import mg.rivolink.ai.linkai.environments.Environment;
 import mg.rivolink.ai.linkai.joypad.Joypad;
 import mg.rivolink.ai.linkai.joypad.JoypadListener;
@@ -37,11 +37,12 @@ import mg.rivolink.ai.linkai.screens.ui.StatsPanel;
 import mg.rivolink.ai.linkai.screens.ui.VertiPanel;
 import mg.rivolink.ai.linkai.screens.viewports.GameViewport;
 
-public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingWindow.SettingListener {
+public class PlayScreen extends ScreenAdapter implements JoypadListener, SettingWindow.SettingListener {
 
     public static final int START_X = 250;
 
     private Button butt_grid;
+    private Button butt_reset;
     private Button butt_learning;
     private Button butt_automate;
 
@@ -53,7 +54,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     private Button butt_setting;
     private SettingWindow win_setting;
 
-    private Button butt_qtable;
+    private TextButton butt_qtable;
     private LogWindow win_qtable;
 
     private Button butt_stats;
@@ -71,7 +72,9 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
 
     private Skin skin = Data.SkinLoader.skin;
 
-    private float e = 1f;
+    private float epsilon = 1.0f;
+    private float epsilonMin = 0.01f;
+    private float epsilonDecay = 0.995f;
 
     private Agent agent;
     private Target zelda;
@@ -79,7 +82,11 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     private Environment env;
     private Environment.Transition t;
 
-    private AlgorithmManager algorithmManager;
+    private Algorithm currentAlgorithm = Algorithm.NEURAL_NETWORK;
+    
+    private int stepCount = 0;
+    private int episodeCount = 0;
+    private float totalReward = 0;
 
     public PlayScreen(){
 
@@ -104,8 +111,6 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         joypad = new Joypad();
         joypad.addJoypadListener(this);
 
-        algorithmManager = new AlgorithmManager();
-
         Gdx.input.setInputProcessor(new InputMultiplexer(stage, joypad));
 
         createStage();
@@ -120,7 +125,7 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
 
         select_algo = new AlgorithmSelect(skin);
         select_algo.setItems(Algorithm.ALL);
-        select_algo.setSelected(Algorithm.getSaved());
+        select_algo.setSelected(Algorithm.NEURAL_NETWORK);
         select_algo.addListener(changeListener);
         panel.addActor(select_algo);
 
@@ -137,6 +142,10 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         butt_learning.setChecked(true);
         panel.addActor(butt_learning, true);
 
+        butt_reset = new TextButton("Reset", skin);
+        butt_reset.addListener(clickListener);
+        panel.addActor(butt_reset, true);
+
         butt_grid = new TextButton("Grid", skin);
         butt_grid.addListener(clickListener);
         panel.addActor(butt_grid, true);
@@ -148,11 +157,11 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         win_setting.setVisible(false);
         stage.addActor(win_setting);
 
-        butt_qtable = new TextButton("Table", skin);
+        butt_qtable = new TextButton("Network", skin);
         butt_qtable.addListener(clickListener);
         panel.addActor(butt_qtable);
 
-        win_qtable = new LogWindow("Q-table", skin);
+        win_qtable = new LogWindow("DQN Info", skin);
         win_qtable.setPosition(START_X, HEIGHT/2-20);
         win_qtable.setSize(320, 240);
         win_qtable.setVisible(false);
@@ -188,6 +197,8 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         );
 
         env.init(agent, zelda);
+
+        resetEpisode();
     }
 
     @Override
@@ -208,12 +219,13 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
                 break;
             }
             default:{
-                if(type == Joypad.POINTER)
+                if(type == Joypad.POINTER) {
                     pointer_pop.showPointerPosition(px, py);
+                }
             }
         }
 
-        if(action != null && !QLearn.useRL){
+        if(action != null && !DeepQLearn.useRL && !QLearn.useRL){
             step(action);
         }
     }
@@ -224,16 +236,65 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         agent.setPosition(t.x, t.y);
         agent.setOrientation(t.ori);
 
-        if(!QLearn.stopLearning)
-            QLearn.update(t.s,t.a,t.r,t.sp);
+        if(!DeepQLearn.stopLearning && !QLearn.stopLearning) {
+            if(currentAlgorithm == Algorithm.NEURAL_NETWORK) {
+                DeepQLearn.update(t.s, t.a, t.r, t.sp, t.end);
+            } else {
+                QLearn.update(t.s, t.a, t.r, t.sp);
+            }
+        }
 
-        win_qtable.setText(QLearn.qualities());
-        win_stats.addText(String.format(
-            "%s %s %s",
+        // Track stats
+        stepCount++;
+        totalReward += t.r;
+
+        // Update UI
+        updateNetworkInfo();
+        updateStats();
+
+        // Check for episode end
+        if(t.end) {
+            resetEpisode();
+        }
+    }
+
+    private void resetEpisode() {
+        episodeCount++;
+
+        stepCount = 0;
+        totalReward = 0;
+        
+        // Decay epsilon
+        if(epsilon > epsilonMin) {
+            epsilon *= epsilonDecay;
+        }
+    }
+
+    private void updateNetworkInfo() {
+        if(currentAlgorithm == Algorithm.NEURAL_NETWORK) {
+            win_qtable.setText(DeepQLearn.qualities());
+        } else {
+            win_qtable.setText(QLearn.qualities());
+        }
+    }
+
+    private void updateStats() {
+        String sep = "----------\n";
+        String stats = String.format(
+            "Episode: %d\nSteps: %d\nTotal Reward: %.1f\nEpsilon: %.3f\n\n%s\nQ-values: %s",
+            episodeCount,
+            stepCount,
+            totalReward,
+            epsilon,
             t.toString(),
-            QLearn.Q(t.s, t.a),
-            QLearn.e_greedy(0, t.sp)
-        ));
+            currentAlgorithm == Algorithm.NEURAL_NETWORK ? 
+                java.util.Arrays.toString(DeepQLearn.getQValues(t.sp)) : 
+                String.format("[%.2f, %.2f, %.2f]", 
+                    QLearn.Q(t.sp, 0), 
+                    QLearn.Q(t.sp, 1), 
+                    QLearn.Q(t.sp, 2))
+        );
+        win_stats.addText(sep + stats);
     }
 
     public void drawState(Batch batch){
@@ -246,9 +307,19 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
     public void render(float delta){
         GameViewport.clear();
 
-        if(QLearn.useRL && env.check(delta)){
-            e = Math.max(0.1f, e-0.001f);
-            step(QLearn.e_greedy(e, t.sp));
+        boolean isNN = (currentAlgorithm == Algorithm.NEURAL_NETWORK);
+        boolean useRL = isNN ? DeepQLearn.useRL : QLearn.useRL;
+
+        if(useRL && env.check(delta)){
+            Agent.Action action;
+
+            if(currentAlgorithm == Algorithm.NEURAL_NETWORK) {
+                action = DeepQLearn.e_greedy(epsilon, t.sp);
+            } else {
+                action = QLearn.e_greedy(epsilon, t.sp);
+            }
+
+            step(action);
         }
 
         camera.update();
@@ -275,23 +346,14 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
         @Override
         public void changed(ChangeEvent event, Actor actor) {
             if (actor == select_algo) {
-                butt_qtable.setChecked(false);
-                butt_stats.setChecked(false);
-
-                win_qtable.setVisible(false);
-                win_stats.setVisible(false);
-
-                Algorithm algo = select_algo.getSelected();
-                algorithmManager.setAlgorithm(algo);
-
-                switch (algo) {
+                switch (currentAlgorithm = select_algo.getSelected()) {
                     case Q_TABLE:
-                        butt_qtable.setVisible(true);
-                        butt_stats.setVisible(true);
+                        butt_qtable.setText("Table");
+                        win_qtable.getTitleLabel().setText("Q-Table");
                         break;
                     case NEURAL_NETWORK:
-                        butt_qtable.setVisible(false);
-                        butt_stats.setVisible(false);
+                        butt_qtable.setText("Network");
+                        win_qtable.getTitleLabel().setText("DQN Info");
                         break;
                     default:
                         break;
@@ -309,11 +371,28 @@ public class PlayScreen extends ScreenAdapter implements JoypadListener,SettingW
             boolean isVisible = false;
 
             if(actor == butt_automate){
-                QLearn.useRL = !QLearn.useRL;
-                win_setting.canSave(QLearn.useRL);
+                if(currentAlgorithm == Algorithm.NEURAL_NETWORK) {
+                    DeepQLearn.useRL = !DeepQLearn.useRL;
+                    win_setting.canSave(DeepQLearn.useRL);
+                } else {
+                    QLearn.useRL = !QLearn.useRL;
+                    win_setting.canSave(QLearn.useRL);
+                }
             }
             else if(actor == butt_learning){
-                QLearn.stopLearning = butt_learning.isChecked();
+                if(currentAlgorithm == Algorithm.NEURAL_NETWORK) {
+                    DeepQLearn.stopLearning = butt_learning.isChecked();
+                } else {
+                    QLearn.stopLearning = butt_learning.isChecked();
+                }
+            }
+            else if(actor == butt_reset){
+                if(currentAlgorithm == Algorithm.NEURAL_NETWORK) {
+                    DeepQLearn.reset();
+                }
+                epsilon = 1.0f;
+                episodeCount = 0;
+                resetEpisode();
             }
             else if(actor == butt_grid){
                 env.showStates(!butt_grid.isChecked());
