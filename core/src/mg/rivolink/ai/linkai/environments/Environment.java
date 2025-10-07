@@ -41,6 +41,8 @@ public class Environment {
         public int[] sp = {0, 0, 0};
         public int r = 0;
 
+        public boolean end = false;
+
         public Transition(){
             x = y = 0;
             ori = Agent.Orientation.DOWN;
@@ -183,11 +185,13 @@ public class Environment {
         t.init();
         t.r = 0;
         t.a = action.index;
+        t.end = false;
         switch(action){
             case GO_AHEAD:{
                 if(t.s[1] == INTERDIT){
                     iniTrans.copyTo(t);
                     t.r = -3;
+                    t.end = true;
                     state(false);
                     return t;
                 }
@@ -198,6 +202,7 @@ public class Environment {
                 else if(t.s[1] == DEST){
                     iniTrans.copyTo(t);
                     t.r = 5;
+                    t.end = true;
                     state(false);
                     return t;
                 }
